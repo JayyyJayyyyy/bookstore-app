@@ -1,0 +1,29 @@
+services:
+  my-app:
+    build: .
+    restart: always
+    depends_on:
+      - database  
+    ports:
+      - "80:80"
+    networks:
+      - mynet 
+  database:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: K1234r
+      MYSQL_DATABASE: bookstore_db
+      MYSQL_USER: clarusway
+      MYSQL_PASSWORD: Clarusway_1
+    networks:
+      - mynet
+    volumes:
+    - my-vol:/var/lib/mysql
+networks:
+  mynet:
+    driver: bridge
+volumes:
+  my-vol :          
+      
+
+     
