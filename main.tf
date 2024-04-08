@@ -21,7 +21,7 @@ locals {
 }
 
 resource "aws_security_group" "allow_ssh" {
-  name        = "Web Server of Bookstore"
+  name        = "${local.user}-docker-instance-sg"
   description = "Allow SSH inbound traffic"
 
   dynamic "ingress" {
@@ -67,7 +67,7 @@ resource "aws_instance" "tf-ec2" {
   key_name = local.key-name
   vpc_security_group_ids = [ aws_security_group.allow_ssh.id ]
   tags = {
-      Name = "${local.user}-Docker-instance"
+      Name = "Web Server of Bookstore"
   }
 
   user_data = <<-EOF
