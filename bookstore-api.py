@@ -6,7 +6,7 @@ from flaskext.mysql import MySQL
 app = Flask(__name__)
 
 # Configure sqlite database
-app.config['MYSQL_DATABASE_HOST'] = 'database.cp0umooyqml3.us-east-1.rds.amazonaws.com'
+app.config['MYSQL_DATABASE_HOST'] = 'database'
 app.config['MYSQL_DATABASE_USER'] = 'clarusway'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'Clarusway_1'
 app.config['MYSQL_DATABASE_DB'] = 'bookstore_db'
