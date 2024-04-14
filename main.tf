@@ -1,4 +1,3 @@
-
 # Please change the key_name and your config file 
 terraform {
   required_providers {
@@ -15,7 +14,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "ec2-secgr" {
-  name = "app-sec"
+  name = "app-sec-aws_security_group"
   description = "Allow ssh inbound traffic"
 
 
@@ -55,7 +54,7 @@ resource "aws_instance" "ec2" {
    tags = {
     Name = "Web Server of Bookstore"
    }
-   user_data = templatefile ("userdata.sh", {TOKEN = var.token , USER = var.user})
+   user_data = templatefile ("userdata.sh", {user-data-git-token = var.token , user-data-git-name = var.user})
 }
 
 variable "token" {
@@ -64,8 +63,3 @@ variable "token" {
  variable "user" {
    default = "JayyyJayyyyy"
  }
-output "myec2-public-ip" {
-  value = aws_instance.tf-ec2.public_ip
-}
-
-
