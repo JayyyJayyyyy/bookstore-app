@@ -1,3 +1,4 @@
+
 # Please change the key_name and your config file 
 terraform {
   required_providers {
@@ -13,25 +14,19 @@ provider "aws" {
   region  = "us-east-1"
 }
 
-locals {
-  instance-type = "t2.micro"
-  key-name = "firstkey"
-  secgr-dynamic-ports = [22,80,443,8080,5000,3306]
-  user = "clarusway"
-}
+resource "aws_security_group" "ec2-secgr" {
+  name = "app-sec"
+  description = "Allow ssh inbound traffic"
 
-resource "aws_security_group" "allow_ssh" {
-  name        = "${local.user}-docker-instance-sg"
-  description = "Allow SSH inbound traffic"
 
-  dynamic "ingress" {
-    for_each = local.secgr-dynamic-ports
+dynamic "ingress" {
+    for_each = [22,80,8080,3306]
     content {
       from_port = ingress.value
       to_port = ingress.value
       protocol = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-  }
+      cidr_blocks = ["0.0.0.0/0"]    
+    }
 }
 
   egress {
@@ -43,54 +38,34 @@ resource "aws_security_group" "allow_ssh" {
   }
 }
 
-data "aws_ami" "al2023" {
-  most_recent      = true
-  owners           = ["amazon"]
-
+data "aws_ami" "amazon-linux-2" {
+  most_recent = true
+  owners      = ["amazon"]
   filter {
-    name = "virtualization-type"
-    values = ["hvm"]
-  }
-  filter {
-    name = "name"
-    values = ["al2023-ami-2023*"]
-  }
-  filter {
-    name = "architecture"
-    values = ["x86_64"]
+    name   = "name"
+    values = ["amzn2-ami-hvm*"]
   }
 }
 
-resource "aws_instance" "tf-ec2" {
-  ami           = data.aws_ami.al2023.id
-  instance_type = local.instance-type
-  key_name = local.key-name
-  vpc_security_group_ids = [ aws_security_group.allow_ssh.id ]
-  tags = {
-      Name = "Web Server of Bookstore"
-  }
+resource "aws_instance" "ec2" {
+   ami = data.aws_ami.amazon-linux-2.id
+   instance_type = "t2.micro"
+   key_name = "firstkey"
+   vpc_security_group_ids = [aws_security_group.ec2-secgr.id]
+   tags = {
+    Name = "Web Server of Bookstore"
+   }
+   user_data = templatefile ("userdata.sh", {TOKEN = var.token , USER = var.user})
+}
 
-  user_data = <<-EOF
-              #!/bin/bash
-              hostnamectl set-hostname docker_instance
-              dnf update -y
-              dnf install git -y
-              dnf install docker -y
-              systemctl start docker
-              systemctl enable docker
-              usermod -a -G docker ec2-user
-              # install docker-compose
-              curl -SL https://github.com/docker/compose/releases/download/v2.26.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-              chmod +x /usr/local/bin/docker-compose
-              cd /home/ec2-user && git clone https://github.com/JayyyJayyyyy/bookstore-app.git
-              cd bookstore-app
-              docker-compose up
-	          EOF
-}  
+variable "token" {
+  default = "xxx"
+}
+ variable "user" {
+   default = "JayyyJayyyyy"
+ }
 output "myec2-public-ip" {
   value = aws_instance.tf-ec2.public_ip
 }
 
-output "ssh-connection-command" {
-  value = "ssh -i ${local.key-name}.pem ec2-user@${aws_instance.tf-ec2.public_ip}"
-}
+
