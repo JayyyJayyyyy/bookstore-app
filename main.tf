@@ -54,12 +54,16 @@ resource "aws_instance" "ec2" {
    tags = {
     Name = "Web Server of Bookstore"
    }
-   user_data = templatefile ("userdata.sh", {user-data-git-token = var.token , user-data-git-name = var.user})
+   user_data = templatefile ("userdata.sh", {user-data-git-token = data.aws_ssm_parameter.pass.value , user-data-git-name = data.aws_ssm_parameter.user.value })
 }
 
-variable "token" {
-  default = "xxx"
+
+ data "aws_ssm_parameter" "pass" {
+  name = "pass"
 }
- variable "user" {
-   default = "JayyyJayyyyy"
- }
+ data "aws_ssm_parameter" "user" {
+  name = "user"
+}
+output "myec2-public-ip" {
+  value = aws_instance.tf-ec2.public_ip
+}
