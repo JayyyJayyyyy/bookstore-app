@@ -65,5 +65,5 @@ resource "aws_instance" "ec2" {
   name = "user"
 }
 output "myec2-public-ip" {
-  value = aws_instance.tf-ec2.public_ip
+  value = aws_instance.ec2.public_ip
 }
