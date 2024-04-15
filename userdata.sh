@@ -1,8 +1,8 @@
 #! /bin/bash
 hostnamectl set-hostname docker_instance
-yum update -y
-yum install git -y
-yum install docker -y
+dnf update -y
+dnf install git -y
+dnf install docker -y
 systemctl start docker
 systemctl enable docker
 TOKEN=${user-data-git-token}
