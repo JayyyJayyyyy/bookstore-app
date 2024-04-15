@@ -13,8 +13,8 @@ provider "aws" {
   region  = "us-east-1"
 }
 
-resource "aws_security_group" "ec2-secgr" {
-  name = "app-sec-aws_security_group"
+resource "aws_security_group" "ec-secgr" {
+  name = "app-sec-aws_security"
   description = "Allow ssh inbound traffic"
 
 
@@ -50,20 +50,39 @@ resource "aws_instance" "ec2" {
    ami = data.aws_ami.amazon-linux-2.id
    instance_type = "t2.micro"
    key_name = "firstkey"
-   vpc_security_group_ids = [aws_security_group.ec2-secgr.id]
+   vpc_security_group_ids = [aws_security_group.ec-secgr.id]
+   user_data = templatefile ("userdata.sh", { user-data-git-token = data.aws_ssm_parameter.pass.value , user-data-git-name = data.aws_ssm_parameter.user.value })
    tags = {
     Name = "Web Server of Bookstore"
    }
-   user_data = templatefile ("userdata.sh", {user-data-git-token = data.aws_ssm_parameter.pass.value , user-data-git-name = data.aws_ssm_parameter.user.value })
 }
 
 
- data "aws_ssm_parameter" "pass" {
+data "aws_ssm_parameter" "pass" {
   name = "pass"
 }
- data "aws_ssm_parameter" "user" {
+data "aws_ssm_parameter" "user" {
   name = "user"
 }
+data "aws_route53_zone" "primary" {
+  name = "cloudjourney.click"
+}
+
+resource "aws_route53_record" "www" {
+  zone_id = data.aws_route53_zone.primary.zone_id
+  name    = "bookstore.cloudjourney.click"
+  type    = "A"
+  ttl     = 300
+  records = [aws_instance.ec2.public_ip]
+}
+
 output "myec2-public-ip" {
   value = aws_instance.ec2.public_ip
 }
+output "websiteurl" {
+  value = "http://${aws_route53_record.www.name}"
+}
+
+output "dns-name" {
+  value = "http://${aws_instance.ec2.public_dns}"
+} 
